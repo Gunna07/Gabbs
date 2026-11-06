@@ -280,16 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     7. 3D INTERACTIVE SHOWCASE (SCROLLTRIGGER SPREAD & SCALE)
+     7. FIVE PILLARS LIQUID GLASS SHOWCASE
      ========================================================================== */
   const pillarsSection = document.getElementById('brand-pillars');
   if (pillarsSection) {
+    // Animate section header on scroll reveal
     gsap.fromTo('#pillars-header',
-      { opacity: 0, y: 40 },
+      { opacity: 0, y: 50 },
       {
         opacity: 1,
         y: 0,
-        duration: 1,
+        duration: 1.2,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: pillarsSection,
@@ -298,41 +299,53 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     );
 
-    // Dynamic 3D Objects animation tied to scroll scrub
-    ScrollTrigger.create({
-      trigger: pillarsSection,
-      start: 'top bottom',
-      end: 'bottom top',
-      scrub: 1.5,
-      onUpdate: (self) => {
-        if (window.pillarObjectsController) {
-          const progress = self.progress;
-          // Curve: objects start condensed, spread out in the center, and scale smoothly
-          const spreadFactor = Math.sin(progress * Math.PI);
-          window.pillarObjectsController.setSpread(0.4 + spreadFactor * 0.7);
-          window.pillarObjectsController.setScale(0.85 + spreadFactor * 0.3);
+    // Stagger the viewport container entrance
+    gsap.fromTo('#pillars-viewport',
+      { opacity: 0, y: 60, scale: 0.97 },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 1.4,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '#pillars-viewport',
+          start: 'top 85%'
         }
       }
-    });
+    );
 
-    // Stagger the 3 pillar description cards
-    const pillarCards = document.querySelectorAll('.pillar-card');
-    if (pillarCards.length) {
-      gsap.fromTo(pillarCards,
-        { opacity: 0, y: 50 },
+    // Stagger each pillar column into view
+    const pillarColumns = document.querySelectorAll('.pillar-column');
+    if (pillarColumns.length) {
+      gsap.fromTo(pillarColumns,
+        { opacity: 0, y: 40 },
         {
           opacity: 1,
           y: 0,
-          stagger: 0.2,
+          stagger: 0.12,
           duration: 1,
           ease: 'power3.out',
           scrollTrigger: {
-            trigger: '#pillars-cards-container',
-            start: 'top 80%'
+            trigger: '#pillars-viewport',
+            start: 'top 75%'
           }
         }
       );
     }
+
+    // Scroll-driven constellation morph
+    ScrollTrigger.create({
+      trigger: pillarsSection,
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: true,
+      onUpdate: (self) => {
+        if (window.pillarObjectsController && typeof window.pillarObjectsController.onScroll === 'function') {
+          window.pillarObjectsController.onScroll(self.progress);
+        }
+      }
+    });
   }
 
   /* ==========================================================================
