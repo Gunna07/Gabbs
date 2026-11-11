@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Department Portal — GABBS Ultramart &amp; Village Market</title>
+  
+  <!-- Preload Portal Backgrounds -->
+  <link rel="preload" as="image" href="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&amp;fit=crop&amp;w=1920&amp;q=85">
+  <link rel="preload" as="image" href="assets/images/village-market.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            charcoal: '#1a1a1a',
+            gold: {
+              DEFAULT: '#c9a96e',
+              light: '#dfc28d',
+              dark: '#a68244',
+              glow: 'rgba(201, 169, 110, 0.22)'
+            },
+            ivory: '#f5f0e8',
+            surface: {
+              DEFAULT: '#0d0d0d',
+              card: '#141414',
+              elevated: '#1a1a1a',
+              border: 'rgba(201, 169, 110, 0.16)'
+            },
+            warm: {
+              text: '#e8e0d4',
+              subtle: '#8a7e6d',
+              muted: '#5e5549'
+            }
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            accent: ['Cormorant Garamond', 'Garamond', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #050505;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #e8e0d4;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* 3D Perspective Context */
+    .portal-perspective-container {
+      perspective: 1400px;
+      perspective-origin: center center;
+    }
+
+    /* Ambient Film Grain Texture */
+    .noise-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 60;
+      opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Top Bar Glass Pill */
+    .glass-pill-nav {
+      background: rgba(18, 18, 18, 0.65);
+      backdrop-filter: blur(18px) saturate(1.8);
+      -webkit-backdrop-filter: blur(18px) saturate(1.8);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 9999px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-pill-nav:hover {
+      background: rgba(28, 28, 28, 0.85);
+      border-color: rgba(201, 169, 110, 0.4);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 15px rgba(201, 169, 110, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Portal Halves */
+    .portal-half {
+      position: relative;
+      flex: 1 1 50%;
+      height: 100%;
+      overflow: hidden;
+      cursor: default;
+      outline: none;
+      transition: flex 1s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Store Interior Layer */
+    .store-interior {
+      position: absolute;
+      inset: -5%;
+      width: 110%;
+      height: 110%;
+      background-position: center center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      transform: scale(1);
+      transform-origin: center center;
+      transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, filter;
+    }
+
+    /* Hover effect on interior */
+    .portal-half:hover .store-interior {
+      transform: scale(1.035);
+      filter: brightness(1.08) contrast(1.02);
+    }
+
+    /* Glass Door Architecture System */
+    .glass-door-system {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 20;
+      display: flex;
+      perspective: 1100px;
+      perspective-origin: center center;
+      transform-style: preserve-3d;
+    }
+
+    /* Individual Door Leaf */
+    .door-leaf {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.07) 0%,
+        rgba(255, 255, 255, 0.02) 40%,
+        rgba(255, 255, 255, 0.04) 100%
+      );
+      backdrop-filter: blur(2.5px);
+      -webkit-backdrop-filter: blur(2.5px);
+      box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05);
+      transition: transform 0.9s cubic-bezier(0.2, 0.85, 0.25, 1),
+                  opacity 0.9s cubic-bezier(0.2, 0.85, 0.25, 1);
+      will-change: transform;
+      transform-style: preserve-3d;
+    }
+
+    /* Left Door Leaf specific geometry */
+    .left-door-leaf {
+      left: 0;
+      border-right: 2px solid rgba(255, 255, 255, 0.32);
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: 2px solid rgba(255, 255, 255, 0.15);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      transform-origin: left center;
+    }
+
+    /* Right Door Leaf specific geometry */
+    .right-door-leaf {
+      right: 0;
+      border-left: 2px solid rgba(255, 255, 255, 0.32);
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: 2px solid rgba(255, 255, 255, 0.15);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      transform-origin: right center;
+    }
+
+    /* Diagonal Specular Reflection Sheen across the Glass Doors */
+    .glass-sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        115deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.03) 18%,
+        rgba(255, 255, 255, 0.15) 30%,
+        rgba(255, 255, 255, 0.04) 38%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.08) 68%,
+        transparent 80%
+      );
+      mix-blend-mode: overlay;
+      opacity: 0.85;
+      transition: opacity 0.5s ease;
+    }
+
+    .portal-half:hover .glass-sheen {
+      opacity: 1;
+    }
+
+    /* Etched Frosted Architectural Safety Band (Mall Glass Manifestation) */
+    .glass-manifestation-band {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 48px;
+      transform: translateY(-50%);
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.06) 0px,
+        rgba(255, 255, 255, 0.06) 12px,
+        transparent 12px,
+        transparent 24px
+      );
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Door Handles in Center Seam */
+    .door-handle-assembly {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 25;
+      pointer-events: none;
+    }
+
+    .left-door-leaf .door-handle-assembly {
+      right: 18px;
+    }
+    .right-door-leaf .door-handle-assembly {
+      left: 18px;
+    }
+
+    /* Metallic Door Pull Bar */
+    .door-handle-bar {
+      width: 10px;
+      height: 220px;
+      border-radius: 6px;
+      background: linear-gradient(
+        90deg,
+        #4a4a4a 0%,
+        #8a8a8a 22%,
+        #f0f0f0 48%,
+        #ffffff 54%,
+        #b0b0b0 75%,
+        #3d3d3d 100%
+      );
+      box-shadow: 4px 10px 24px rgba(0, 0, 0, 0.7),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.8),
+                  inset 0 -1px 2px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+
+    .door-handle-bar.gold-tint {
+      background: linear-gradient(
+        90deg,
+        #6e562b 0%,
+        #a68244 20%,
+        #f5e3ba 48%,
+        #fffdf5 54%,
+        #c9a96e 75%,
+        #523e1c 100%
+      );
+      box-shadow: 4px 10px 24px rgba(0, 0, 0, 0.7),
+                  0 0 16px rgba(201, 169, 110, 0.3),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.9);
+    }
+
+    /* Metallic Standoff Mounting Brackets */
+    .handle-standoff {
+      width: 16px;
+      height: 10px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #555, #ccc, #fff, #777);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+      position: absolute;
+    }
+    .handle-standoff.top { top: 22px; }
+    .handle-standoff.bottom { bottom: 22px; }
+    .left-door-leaf .handle-standoff { right: -6px; }
+    .right-door-leaf .handle-standoff { left: -6px; }
+
+    /* Top Runner Track & Bottom Guide Rails */
+    .door-runner-track-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 18px;
+      background: linear-gradient(180deg, #222 0%, #151515 60%, #2a2a2a 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.8);
+      z-index: 22;
+    }
+    .door-runner-track-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 14px;
+      background: linear-gradient(0deg, #181818 0%, #0d0d0d 60%, #222 100%);
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      z-index: 22;
+    }
+
+    /* Sleek, Completely Transparent Center Card Container (Zero Card Blur) */
+    .portal-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateZ(40px);
+      z-index: 30;
+      pointer-events: none;
+      width: auto;
+      max-width: 380px;
+      padding: 0;
+      /* Completely Transparent - NO background, NO border, NO card blur */
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .portal-half:hover .portal-badge {
+      transform: translate(-50%, -50%) translateZ(65px) scale(1.03);
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Main Typography with Ethereal Frosted Glass Text Blur Effect */
+    .portal-main-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.6rem, 4.8vw, 4rem);
+      font-weight: 700;
+      color: #ffffff !important;
+      letter-spacing: 0.05em;
+      line-height: 1.15;
+      margin: 0 0 1.5rem 0;
+      /* Glowing Frosted Text Blur Effect */
+      text-shadow: 
+        0 0 14px rgba(255, 255, 255, 0.85),
+        0 0 28px rgba(255, 255, 255, 0.5),
+        0 0 50px rgba(201, 169, 110, 0.6),
+        0 4px 20px rgba(0, 0, 0, 0.95);
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.45));
+      transition: text-shadow 0.4s ease, filter 0.4s ease, transform 0.4s ease;
+      display: block;
+      white-space: nowrap;
+    }
+
+    .portal-half:hover .portal-main-title {
+      text-shadow: 
+        0 0 20px rgba(255, 255, 255, 0.95),
+        0 0 40px rgba(255, 255, 255, 0.7),
+        0 0 70px rgba(201, 169, 110, 0.8),
+        0 4px 24px rgba(0, 0, 0, 1);
+      filter: drop-shadow(0 0 16px rgba(201, 169, 110, 0.75));
+      transform: scale(1.03);
+    }
+
+    /* Central Architectural Dividing Mullion */
+    #central-mullion {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      transform: translateX(-50%);
+      background: linear-gradient(
+        180deg,
+        rgba(201, 169, 110, 0.8) 0%,
+        rgba(255, 255, 255, 0.4) 25%,
+        rgba(201, 169, 110, 0.9) 50%,
+        rgba(255, 255, 255, 0.4) 75%,
+        rgba(201, 169, 110, 0.8) 100%
+      );
+      box-shadow: 0 0 20px rgba(201, 169, 110, 0.5),
+                  0 0 6px rgba(255, 255, 255, 0.8);
+      z-index: 35;
+      pointer-events: none;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* iOS 26 Glass ENTER Button (Text "ENTER" alone) */
+    .enter-portal-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      padding: 0.8rem 2.6rem;
+      border-radius: 9999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #ffffff !important;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 4px 18px rgba(0, 0, 0, 0.3);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .portal-half:hover .enter-portal-btn {
+      background: linear-gradient(135deg, rgba(201, 169, 110, 0.45) 0%, rgba(201, 169, 110, 0.22) 100%);
+      border-color: #c9a96e;
+      color: #ffffff !important;
+      box-shadow: 0 6px 24px rgba(201, 169, 110, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .enter-portal-btn svg {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .portal-half:hover .enter-portal-btn svg {
+      transform: translateX(4px);
+    }
+
+    /* =========================================================================
+       DOOR OPENING & WALKING INSIDE ANIMATION STATES
+       ========================================================================= */
+
+    /* Dim the unselected half */
+    .portal-half.portal-dimmed {
+      opacity: 0.12 !important;
+      filter: blur(10px) brightness(0.4) !important;
+      pointer-events: none !important;
+      flex: 0 0 20% !important;
+    }
+
+    /* Expand the selected half */
+    .portal-half.portal-active {
+      flex: 1 0 80% !important;
+      cursor: default !important;
+    }
+
+    /* Hide Center Mullion */
+    body.is-animating #central-mullion {
+      opacity: 0;
+    }
+
+    /* Fade badge out on click */
+    .portal-badge.badge-fadeout {
+      opacity: 0 !important;
+      transform: translate(-50%, -60%) scale(0.92) !important;
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    /* 3D Glass Doors Opening */
+    .door-leaf.left-door-opened {
+      transform: translateX(-102%) rotateY(-24deg) !important;
+      opacity: 0.4 !important;
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.9s ease !important;
+    }
+
+    .door-leaf.right-door-opened {
+      transform: translateX(102%) rotateY(24deg) !important;
+      opacity: 0.4 !important;
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.9s ease !important;
+    }
+
+    /* Camera Walk-In Interior Scale */
+    .store-interior.walk-in-active {
+      transform: scale(1.48) translateZ(80px) !important;
+      filter: brightness(1.24) contrast(1.08) !important;
+      transition: transform 1.25s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 1.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    /* Fullscreen Threshold Crossing Fade / Flash */
+    #threshold-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(245, 240, 232, 0.15) 0%, rgba(13, 13, 13, 0.98) 70%, #050505 100%);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease-in;
+    }
+
+    #threshold-overlay.active {
+      opacity: 1;
+    }
+
+    /* Mobile Vertical Stack Overrides */
+    @media (max-width: 768px) {
+      .portal-perspective-container {
+        flex-direction: column !important;
+      }
+      .portal-half {
+        flex: 1 1 50% !important;
+        width: 100% !important;
+        height: 50% !important;
+      }
+      .portal-half.portal-dimmed {
+        flex: 0 0 15% !important;
+      }
+      .portal-half.portal-active {
+        flex: 1 0 85% !important;
+      }
+      #central-mullion {
+        left: 0;
+        right: 0;
+        top: 50%;
+        bottom: auto;
+        width: 100%;
+        height: 3px;
+        transform: translateY(-50%);
+        background: linear-gradient(
+          90deg,
+          rgba(201, 169, 110, 0.8) 0%,
+          rgba(255, 255, 255, 0.4) 50%,
+          rgba(201, 169, 110, 0.8) 100%
+        );
+      }
+      .portal-badge {
+        padding: 0 !important;
+        max-width: 90% !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .portal-main-title {
+        font-size: 2.1rem !important;
+        margin-bottom: 0.9rem !important;
+        white-space: normal !important;
+      }
+      .enter-portal-btn {
+        padding: 0.65rem 2rem !important;
+        font-size: 0.75rem !important;
+      }
+      .door-handle-bar {
+        height: 140px;
+        width: 8px;
+      }
+    }
+  </style>
+</head>
+<body class="w-screen h-screen overflow-hidden bg-black select-none">
+
+  <!-- Ambient Film Grain -->
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <!-- Threshold Flash / Fade Transition Overlay -->
+  <div id="threshold-overlay" aria-hidden="true"></div>
+
+  <!-- =========================================================================
+       FLOATING TOP NAVIGATION HEADER
+       ========================================================================= -->
+  <header class="fixed top-0 left-0 right-0 z-50 px-5 sm:px-8 py-5 flex items-center justify-between pointer-events-none">
+    
+    <!-- Left: Back to Home Link -->
+    <a href="index.html" class="glass-pill-nav pointer-events-auto px-4 py-2 sm:px-5 sm:py-2.5 flex items-center gap-2 text-xs uppercase tracking-wide-luxury text-warm-text/90 hover:text-gold" aria-label="Return to Storefront Homepage">
+      <svg class="w-4 h-4 text-gold transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      <span class="font-medium text-[11.5px] sm:text-xs">Storefront</span>
+    </a>
+
+    <!-- Center: Brand Logo / Department Selector Monogram -->
+    <div class="glass-pill-nav px-5 py-2 hidden sm:flex items-center gap-3 pointer-events-auto">
+      <span class="w-2 h-2 rounded-full bg-gold animate-pulse"></span>
+      <span class="font-serif text-sm tracking-[0.25em] text-ivory uppercase font-semibold">GABBS</span>
+      <span class="text-[11px] uppercase tracking-widest text-warm-subtle border-l border-white/20 pl-3">Department Portal</span>
+    </div>
+
+    <!-- Right: Location Badge -->
+    <div class="glass-pill-nav px-4 py-2 sm:px-5 sm:py-2.5 flex items-center gap-2 text-xs uppercase tracking-wide-luxury text-gold/90 pointer-events-auto">
+      <svg class="w-3.5 h-3.5 text-gold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <span class="text-[11px] sm:text-xs tracking-wider text-warm-text/80">Asaba, Delta State</span>
+    </div>
+
+  </header>
+
+  <!-- =========================================================================
+       MAIN 50/50 SPLIT-SCREEN GLASS DOOR PORTAL
+       ========================================================================= -->
+  <main class="w-full h-full flex flex-col md:flex-row portal-perspective-container relative">
+
+    <!-- Central Architectural Dividing Mullion -->
+    <div id="central-mullion" aria-hidden="true"></div>
+
+    <!-- -----------------------------------------------------------------------
+         LEFT HALF: SUPERMARKET
+         ----------------------------------------------------------------------- -->
+    <section 
+      id="portal-supermarket" 
+      class="portal-half group"
+    >
+      
+      <!-- Store Interior Background Layer -->
+      <div 
+        id="interior-supermarket" 
+        class="store-interior" 
+        style="background-image: linear-gradient(to bottom, rgba(5,5,5,0.25) 0%, rgba(5,5,5,0.08) 50%, rgba(5,5,5,0.45) 100%), url('https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&amp;fit=crop&amp;w=1920&amp;q=85');"
+      ></div>
+
+      <!-- Realistic Double Glass Sliding Door Panels -->
+      <div class="glass-door-system" aria-hidden="true">
+        <!-- Top Track Runner -->
+        <div class="door-runner-track-top"></div>
+        <!-- Bottom Floor Guide Rail -->
+        <div class="door-runner-track-bottom"></div>
+
+        <!-- Left Door Leaf -->
+        <div id="supermarket-door-left" class="door-leaf left-door-leaf">
+          <div class="glass-sheen"></div>
+          <div class="glass-manifestation-band"></div>
+          
+          <!-- Vertical Metallic Door Handle -->
+          <div class="door-handle-assembly">
+            <div class="handle-standoff top"></div>
+            <div class="door-handle-bar"></div>
+            <div class="handle-standoff bottom"></div>
+          </div>
+        </div>
+
+        <!-- Right Door Leaf -->
+        <div id="supermarket-door-right" class="door-leaf right-door-leaf">
+          <div class="glass-sheen"></div>
+          <div class="glass-manifestation-band"></div>
+
+          <!-- Vertical Metallic Door Handle -->
+          <div class="door-handle-assembly">
+            <div class="handle-standoff top"></div>
+            <div class="door-handle-bar"></div>
+            <div class="handle-standoff bottom"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Centered Typography & Enter Button (Completely Transparent Card) -->
+      <div id="badge-supermarket" class="portal-badge">
+        <h2 class="portal-main-title">Supermarket</h2>
+        <button id="btn-enter-supermarket" class="enter-portal-btn" type="button" aria-label="Enter Supermarket">
+          <span>ENTER</span>
+          <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         RIGHT HALF: VILLAGE MARKET
+         ----------------------------------------------------------------------- -->
+    <section 
+      id="portal-village" 
+      class="portal-half group"
+    >
+      
+      <!-- Store Interior Background Layer -->
+      <div 
+        id="interior-village" 
+        class="store-interior" 
+        style="background-image: linear-gradient(to bottom, rgba(5,5,5,0.25) 0%, rgba(5,5,5,0.08) 50%, rgba(5,5,5,0.45) 100%), url('assets/images/village-market.png');"
+      ></div>
+
+      <!-- Realistic Double Glass Sliding Door Panels -->
+      <div class="glass-door-system" aria-hidden="true">
+        <!-- Top Track Runner -->
+        <div class="door-runner-track-top"></div>
+        <!-- Bottom Floor Guide Rail -->
+        <div class="door-runner-track-bottom"></div>
+
+        <!-- Left Door Leaf -->
+        <div id="village-door-left" class="door-leaf left-door-leaf">
+          <div class="glass-sheen"></div>
+          <div class="glass-manifestation-band"></div>
+
+          <!-- Vertical Metallic Door Handle (Brushed Gold Finish) -->
+          <div class="door-handle-assembly">
+            <div class="handle-standoff top"></div>
+            <div class="door-handle-bar gold-tint"></div>
+            <div class="handle-standoff bottom"></div>
+          </div>
+        </div>
+
+        <!-- Right Door Leaf -->
+        <div id="village-door-right" class="door-leaf right-door-leaf">
+          <div class="glass-sheen"></div>
+          <div class="glass-manifestation-band"></div>
+
+          <!-- Vertical Metallic Door Handle (Brushed Gold Finish) -->
+          <div class="door-handle-assembly">
+            <div class="handle-standoff top"></div>
+            <div class="door-handle-bar gold-tint"></div>
+            <div class="handle-standoff bottom"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Centered Typography & Enter Button (Completely Transparent Card) -->
+      <div id="badge-village" class="portal-badge">
+        <h2 class="portal-main-title">Village Market</h2>
+        <button id="btn-enter-village" class="enter-portal-btn" type="button" aria-label="Enter Village Market">
+          <span>ENTER</span>
+          <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       3D DOOR OPENING & WALK-IN CONTROLLER SCRIPT
+       ========================================================================= -->
+  <script>
+    (function () {
+      'use strict';
+
+      let isNavigating = false;
+
+      // Realistic Subtle Pneumatic Glass Door Glide Sound (Web Audio API Synthesizer)
+      function playDoorGlideSound() {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          if (ctx.state === 'suspended') {
+            ctx.resume();
+          }
+
+          // Gentle white noise buffer for realistic pneumatic sliding glide
+          const bufferSize = ctx.sampleRate * 1.2;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.05;
+          }
+
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+
+          // Bandpass filter to sculpt the subtle glass glide resonance
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(450, ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 1.0);
+          filter.Q.setValueAtTime(3.0, ctx.currentTime);
+
+          // Gain envelope (soft swell and decay)
+          const gainNode = ctx.createGain();
+          gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.15);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.1);
+
+          noise.connect(filter);
+          filter.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          noise.start();
+          noise.stop(ctx.currentTime + 1.2);
+        } catch (e) {
+          // Audio autoplay policy fallback - silent fail gracefully
+        }
+      }
+
+      // Main Entrance Transition Function
+      function enterDepartment(selectedType) {
+        if (isNavigating) return;
+        isNavigating = true;
+
+        document.body.classList.add('is-animating');
+
+        // Play authentic pneumatic door sliding glide sound
+        playDoorGlideSound();
+
+        const isSupermarket = (selectedType === 'supermarket');
+        const activePortal = isSupermarket 
+          ? document.getElementById('portal-supermarket') 
+          : document.getElementById('portal-village');
+        const inactivePortal = isSupermarket 
+          ? document.getElementById('portal-village') 
+          : document.getElementById('portal-supermarket');
+
+        const activeBadge = isSupermarket 
+          ? document.getElementById('badge-supermarket') 
+          : document.getElementById('badge-village');
+        const activeInterior = isSupermarket 
+          ? document.getElementById('interior-supermarket') 
+          : document.getElementById('interior-village');
+
+        const leftDoor = isSupermarket 
+          ? document.getElementById('supermarket-door-left') 
+          : document.getElementById('village-door-left');
+        const rightDoor = isSupermarket 
+          ? document.getElementById('supermarket-door-right') 
+          : document.getElementById('village-door-right');
+
+        const destinationUrl = isSupermarket ? 'supermarket.html' : 'village-market.html';
+
+        // 1. Expand clicked side and dim the unselected half
+        activePortal.classList.add('portal-active');
+        inactivePortal.classList.add('portal-dimmed');
+
+        // 2. Fade out the center title badge so the entrance is crystal clear
+        activeBadge.classList.add('badge-fadeout');
+
+        // 3. Open the Glass Doors: Slide & swing open apart over 900ms
+        requestAnimationFrame(() => {
+          leftDoor.classList.add('left-door-opened');
+          rightDoor.classList.add('right-door-opened');
+
+          // 4. Camera Walk-In Zoom: Simultaneously scale up background store interior to 1.48
+          activeInterior.classList.add('walk-in-active');
+        });
+
+        // 5. Cinematic Threshold Crossing Flash/Fade at 850ms
+        setTimeout(() => {
+          const overlay = document.getElementById('threshold-overlay');
+          if (overlay) {
+            overlay.classList.add('active');
+          }
+        }, 850);
+
+        // 6. Page Redirect at 1200ms as camera crosses threshold
+        setTimeout(() => {
+          window.location.href = destinationUrl;
+        }, 1200);
+      }
+
+      // Attach Event Listeners to ENTER Buttons ONLY (Screen/Background is NOT clickable)
+      const enterSupermarketBtn = document.getElementById('btn-enter-supermarket');
+      const enterVillageBtn = document.getElementById('btn-enter-village');
+
+      if (enterSupermarketBtn) {
+        enterSupermarketBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          enterDepartment('supermarket');
+        });
+      }
+
+      if (enterVillageBtn) {
+        enterVillageBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          enterDepartment('village');
+        });
+      }
+
+      const supermarketPortal = document.getElementById('portal-supermarket');
+      const villagePortal = document.getElementById('portal-village');
+
+      // Subtle 3D Tilt Interaction on Mouse Movement
+      function setupTilt(portal, badge) {
+        if (!portal || !badge) return;
+        portal.addEventListener('mousemove', (e) => {
+          if (isNavigating) return;
+          const rect = portal.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width - 0.5;
+          const y = (e.clientY - rect.top) / rect.height - 0.5;
+          badge.style.transform = `translate(calc(-50% + ${x * 18}px), calc(-50% + ${y * 18}px)) translateZ(55px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`;
+        });
+        portal.addEventListener('mouseleave', () => {
+          if (isNavigating) return;
+          badge.style.transform = '';
+        });
+      }
+
+      setupTilt(supermarketPortal, document.getElementById('badge-supermarket'));
+      setupTilt(villagePortal, document.getElementById('badge-village'));
+
+    })();
+  </script>
+</body>
+</html>
